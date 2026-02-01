@@ -20,6 +20,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v6
         with:
+          fetch-depth: 0
           repository: MoeKoeMusic/MoeKoeMusic
       - name: Set up Node.js
         uses: actions/setup-node@v6
@@ -29,10 +30,11 @@ jobs:
       - name: build
         id: build
         env:
-          os: ${{ matrix.os == 'ubuntu-latest' && 'linux' || matrix.os == 'windows-latest' && 'win' || 'mac' }}
+          os: ${{ runner.os == 'Windows' && 'win' || runner.os == 'macOS' && 'mac' || 'linux' }}
         run: |
-          VERSION=$(node -p "require('./package.json').version")-nightly-$(date +%Y%m%d)
-          node -p "require('./package.json').version = '$VERSION'; JSON.stringify(require('./package.json'), null, 2)" > package.json
+          VERSION=$(git describe --tags --abbrev=0)-nightly-$(date +%Y%m%d)
+          echo "const fs = require('fs'); const version = '$VERSION'; const packageJson = require('./package.json'); packageJson.version = version; fs.writeFileSync('./package.json', JSON.stringify(packageJson, null, 2));" > version.js
+          node version.js
           npm run install-all
           npm run build
           npm run electron:build:${{ env.os }}
@@ -46,9 +48,4 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ steps.build.outputs.version }}
-          files: |
-            ${{ steps.build.outputs.dist-win }}
-            ${{ steps.build.outputs.dist-mac-arm }}
-            ${{ steps.build.outputs.dist-mac-intel }}
-            ${{ steps.build.outputs.dist-linux }}
-            ${{ steps.build.outputs.dist-linux-deb }}
+          files: ${{ runner.os == 'Windows' && steps.build.outputs.dist-win || runner.os == 'macOS' && steps.build.outputs.dist-mac-arm || steps.build.outputs.dist-linux-deb }}
