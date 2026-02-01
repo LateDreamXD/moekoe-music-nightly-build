@@ -9,7 +9,23 @@ on:
   workflow_dispatch:
 
 jobs:
+  generate-version:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.main.outputs.version }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          repository: MoeKoeMusic/MoeKoeMusic
+      - id: main
+        run: |
+          VERSION=$(git describe --tags --abbrev=0)-nightly-$(date +%Y%m%d)-$(git rev-parse --short HEAD)
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
   build:
+    needs: generate-version
     strategy:
       matrix:
         node: [lts/*]
@@ -31,15 +47,14 @@ jobs:
         id: build
         env:
           os: ${{ runner.os == 'Windows' && 'win' || runner.os == 'macOS' && 'mac' || 'linux' }}
+          version: ${{ needs.generate-version.outputs.version }}
         run: |
-          VERSION=$(git describe --tags --abbrev=0)-nightly-$(date +%Y%m%d)
-          echo "const fs = require('fs'); const version = '$VERSION'; const packageJson = require('./package.json'); packageJson.version = version; fs.writeFileSync('./package.json', JSON.stringify(packageJson, null, 2));" > version.cjs
+          echo "const fs = require('fs'); const packageJson = require('./package.json'); packageJson.version = '${{ env.version }}'; fs.writeFileSync('./package.json', JSON.stringify(packageJson, null, 2));" > version.cjs
           node version.cjs
           npm run install-all
           npm run build
           npm run electron:build:${{ env.os }}
-          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
-          echo "dist-win=dist_electron/MoeKoe_Music_Setup_${VERSION}.exe" >> "$GITHUB_OUTPUT"
+          echo "dist-win=dist_electron/MoeKoe_Music_Setup_${{ env.version }}.exe" >> "$GITHUB_OUTPUT"
           echo "dist-mac-arm=dist_electron/MoeKoe Music-arm64.dmg" >> "$GITHUB_OUTPUT"
           echo "dist-mac-intel=dist_electron/MoeKoe Music-x64.dmg" >> "$GITHUB_OUTPUT"
           echo "dist-linux=dist_electron/MoeKoeMusic.AppImage" >> "$GITHUB_OUTPUT"
