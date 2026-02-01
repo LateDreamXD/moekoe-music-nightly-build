@@ -12,6 +12,8 @@ jobs:
   generate-version:
     runs-on: ubuntu-latest
     outputs:
+      prev_tag: ${{ steps.main.outputs.prev_tag }}
+      commit: ${{ steps.main.outputs.commit }}
       version: ${{ steps.main.outputs.version }}
     steps:
       - name: Checkout repository
