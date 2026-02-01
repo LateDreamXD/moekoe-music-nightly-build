@@ -46,7 +46,7 @@ jobs:
       - name: build
         id: build
         env:
-          os: ${{ runner.os == 'Windows' && 'win' || runner.os == 'macOS' && 'mac' || 'linux' }}
+          os: ${{ runner.os == 'Windows' && 'win' || runner.os == 'macOS' && 'macos' || 'linux' }}
           version: ${{ needs.generate-version.outputs.version }}
         run: |
           echo "const fs = require('fs'); const packageJson = require('./package.json'); packageJson.version = '${{ env.version }}'; fs.writeFileSync('./package.json', JSON.stringify(packageJson, null, 2));" > version.cjs
@@ -62,5 +62,5 @@ jobs:
       - name: release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ steps.build.outputs.version }}
+          tag_name: ${{ needs.generate-version.outputs.version }}
           files: ${{ runner.os == 'Windows' && steps.build.outputs.dist-win || runner.os == 'macOS' && steps.build.outputs.dist-mac-arm || steps.build.outputs.dist-linux-deb }}
