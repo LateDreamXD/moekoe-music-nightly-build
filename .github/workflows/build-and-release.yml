@@ -49,7 +49,7 @@ jobs:
           os: ${{ runner.os == 'Windows' && 'win' || runner.os == 'macOS' && 'macos' || 'linux' }}
           version: ${{ needs.generate-version.outputs.version }}
         run: |
-          echo "const fs = require('fs'); const packageJson = require('./package.json'); packageJson.version = '${{ env.version }}'; fs.writeFileSync('./package.json', JSON.stringify(packageJson, null, 2));" > version.cjs
+          echo "const fs = require('fs'); const packageJson = require('./package.json'); packageJson.version = '${{ env.version }}'.slice(1); fs.writeFileSync('./package.json', JSON.stringify(packageJson, null, 2));" > version.cjs
           node version.cjs
           npm run install-all
           npm run build
