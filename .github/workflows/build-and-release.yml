@@ -57,10 +57,15 @@ jobs:
           echo "dist-win=dist_electron/MoeKoe_Music_Setup_${{ env.version }}.exe" >> "$GITHUB_OUTPUT"
           echo "dist-mac-arm=dist_electron/MoeKoe Music-arm64.dmg" >> "$GITHUB_OUTPUT"
           echo "dist-mac-intel=dist_electron/MoeKoe Music-x64.dmg" >> "$GITHUB_OUTPUT"
-          echo "dist-linux=dist_electron/MoeKoeMusic.AppImage" >> "$GITHUB_OUTPUT"
-          echo "dist-linux-deb=dist_electron/MoeKoeMusic.deb" >> "$GITHUB_OUTPUT"
+          echo "dist-linux=dist_electron/MoeKoe Music.AppImage" >> "$GITHUB_OUTPUT"
+          echo "dist-linux-deb=dist_electron/MoeKoe Music.deb" >> "$GITHUB_OUTPUT"
       - name: release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ needs.generate-version.outputs.version }}
-          files: ${{ runner.os == 'Windows' && steps.build.outputs.dist-win || runner.os == 'macOS' && steps.build.outputs.dist-mac-arm || steps.build.outputs.dist-linux-deb }}
+          files: |
+            ${{ steps.build.outputs.dist-win }}
+            ${{ steps.build.outputs.dist-mac-arm }}
+            ${{ steps.build.outputs.dist-mac-intel }}
+            ${{ steps.build.outputs.dist-linux }}
+            ${{ steps.build.outputs.dist-linux-deb }}
