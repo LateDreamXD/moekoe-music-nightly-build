@@ -22,8 +22,10 @@ jobs:
       - id: main
         run: |
           PREV_TAG=$(git describe --tags --abbrev=0)
-          VERSION=${PREV_TAG}-nightly-$(date +%Y%m%d)-$(git rev-parse --short HEAD)
+          COMMIT=$(git rev-parse --short HEAD)
+          VERSION=${PREV_TAG}-nightly-$(date +%Y%m%d)-${COMMIT}
           echo "prev_tag=$PREV_TAG" >> "$GITHUB_OUTPUT"
+          echo "commit=$COMMIT" >> "$GITHUB_OUTPUT"
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
 
   build:
@@ -64,7 +66,7 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ needs.generate-version.outputs.version }}
-          body: '**Full Changes:** https://github.com/MoeKoeMusic/MoeKoeMusic/compare/${{ needs.generate-version.outputs.prev_tag }}...HEAD'
+          body: '**Full Changes:** https://github.com/MoeKoeMusic/MoeKoeMusic/compare/${{ needs.generate-version.outputs.prev_tag }}...${{ needs.generate-version.outputs.commit }}'
           files: |
             dist_electron/MoeKoe_Music_Setup_${{ needs.generate-version.outputs.version }}.exe
             ${{ steps.build.outputs.dist-mac-arm }}
